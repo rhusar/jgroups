@@ -17,6 +17,7 @@ public interface LocalTransport {
     LocalTransport start() throws Exception;
     LocalTransport stop();
     LocalTransport destroy();
+    LocalTransport resetStats();
 
     /**
      * Sends a message to a given local member. The caller should check before whether dest is a local member;

@@ -4538,7 +4538,13 @@ public class Util {
     public static List<NetworkInterface> getAllAvailableInterfaces() throws SocketException {
         List<NetworkInterface> retval=new ArrayList<>(10);
         for(Enumeration<NetworkInterface> en=NetworkInterface.getNetworkInterfaces(); en.hasMoreElements(); ) {
-            retval.add(en.nextElement());
+            NetworkInterface intf=en.nextElement();
+            retval.add(intf);
+            for(Enumeration<NetworkInterface> subs=intf.getSubInterfaces(); subs.hasMoreElements();) {
+                NetworkInterface sub=subs.nextElement();
+                if(sub != null)
+                    retval.add(sub);
+            }
         }
         return retval;
     }

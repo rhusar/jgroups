@@ -10,6 +10,7 @@ import org.jgroups.conf.PropertyConverters;
 import org.jgroups.jmx.AdditionalJmxObjects;
 import org.jgroups.logging.LogFactory;
 import org.jgroups.stack.DiagnosticsHandler;
+import org.jgroups.stack.IpAddress;
 import org.jgroups.stack.MessageProcessingPolicy;
 import org.jgroups.stack.Protocol;
 import org.jgroups.util.ThreadFactory;
@@ -19,14 +20,12 @@ import org.jgroups.util.*;
 import java.io.DataInput;
 import java.io.InterruptedIOException;
 import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
+import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 
 /**
@@ -460,7 +459,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     public long getThreadPoolKeepAliveTime() {return thread_pool_keep_alive_time;}
 
     public Object[] getJmxObjects() {
-        return new Object[]{msg_stats, msg_processing_policy, bundler};
+        return new Object[]{msg_stats, msg_processing_policy, bundler, local_transport};
     }
 
     @Property(name="level", description="Sets the level")
@@ -608,6 +607,12 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     protected MessageProcessingPolicy msg_processing_policy=new MaxOneThreadPerSender();
 
     protected LocalTransport          local_transport;
+    @ManagedAttribute(description="A list of local addresses")
+    protected Collection<InetAddress> local_addresses;
+    @ManagedAttribute(description="List of members with local addresses (same-host members) in the current view")
+    protected final List<Address>     local_members=new ArrayList<>();
+    @ManagedAttribute(description="Whether or not we have members with local addresses in the current view")
+    protected volatile boolean        has_local_members;
 
     protected DiagnosticsHandler      diag_handler;
     protected final List<DiagnosticsHandler.ProbeHandler> preregistered_probe_handlers=new LinkedList<>();
@@ -691,6 +696,8 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         msg_stats.reset();
         avg_batch_size.clear();
         msg_processing_policy.reset();
+        if(local_transport != null)
+            local_transport.resetStats();
     }
 
     public <T extends TP> T registerProbeHandler(DiagnosticsHandler.ProbeHandler handler) {
@@ -727,10 +734,10 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         return (T)this;
     }
 
-    public LocalTransport   getLocalTransport()                   {return local_transport;}
-    public <T extends TP> T setLocalTransport(LocalTransport ltp) {this.local_transport=ltp; return (T)this;}
-
-    public Bundler getBundler() {return bundler;}
+    public LocalTransport    getLocalTransport()                 {return local_transport;}
+    public <T extends TP> T  setLocalTransport(LocalTransport l) {this.local_transport=l; return (T)this;}
+    public boolean           isLocalMember(Address a)            {return local_members != null && local_members.contains(a);}
+    public Bundler           getBundler()                        {return bundler;}
 
     /** Installs a bundler. Needs to be done before the channel is connected */
     public <T extends TP> T setBundler(Bundler bundler) {
@@ -953,6 +960,11 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
             Class<?> cl=Util.loadClass(local_transport_class, getClass());
             local_transport=(LocalTransport)cl.getDeclaredConstructor().newInstance();
             local_transport.init(this, local_transport_config);
+            Collection<InetAddress> addrs=Util.getAllAvailableAddresses(null);
+            local_addresses=new ArrayList<>(addrs.size());
+            // add IPv4 addresses at the head, IPv6 address at the end
+            local_addresses.addAll(addrs.stream().filter(a -> a instanceof Inet4Address).collect(Collectors.toList()));
+            local_addresses.addAll(addrs.stream().filter(a -> a instanceof Inet6Address).collect(Collectors.toList()));
         }
 
         if(thread_factory == null)
@@ -1232,6 +1244,22 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
                     bundler.viewChange(evt.getArg());
                 if(msg_processing_policy instanceof MaxOneThreadPerSender)
                     ((MaxOneThreadPerSender)msg_processing_policy).viewChange(view.getMembers());
+
+                if(local_transport != null) {
+                    local_members.clear();
+                    for(Address mbr : members) {
+                        PhysicalAddress pa=getPhysicalAddressFromCache(mbr);
+                        if(pa == null) {
+                            log.warn("physical address for %s not found", mbr);
+                            continue;
+                        }
+                        InetAddress addr=pa instanceof IpAddress? ((IpAddress)pa).getIpAddress() : null;
+                        if(addr != null && local_addresses.contains(addr))
+                            if(!local_members.contains(mbr))
+                                local_members.add(mbr);
+                    }
+                    has_local_members=!local_members.isEmpty();
+                }
                 break;
 
             case Event.CONNECT:
@@ -1653,6 +1681,17 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
 
 
     protected void sendToSingleMember(final Address dest, byte[] buf, int offset, int length) throws Exception {
+        if(local_transport != null && has_local_members && isLocalMember(dest)) {
+            try {
+                local_transport.sendTo(dest, buf, offset, length);
+                return;
+            }
+            catch(Exception ex) {
+                log.warn("failed sending message to %s via local transport, sending message via regular transport: %s",
+                         dest, ex);
+            }
+        }
+
         PhysicalAddress physical_dest=dest instanceof PhysicalAddress? (PhysicalAddress)dest : getPhysicalAddressFromCache(dest);
         if(physical_dest != null) {
             sendUnicast(physical_dest,buf,offset,length);
