@@ -188,7 +188,7 @@ public class SimpleTCP extends TP {
         return conn;
     }
 
-    protected boolean addPhysicalAddressToCache(Address logical_addr, PhysicalAddress physical_addr) {
+    public boolean addPhysicalAddressToCache(Address logical_addr, PhysicalAddress physical_addr) {
         IpAddress tmp=(IpAddress)physical_addr;
         addr_table.put(logical_addr, new InetSocketAddress(tmp.getIpAddress(), tmp.getPort()));
         return super.addPhysicalAddressToCache(logical_addr, physical_addr);

@@ -131,6 +131,11 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     @Property(description="The fully qualified name of a class implementing MessageProcessingPolicy")
     protected String message_processing_policy;
 
+    @Property(description="The fully qualified name of a class implementing LocalTransport",name="local_transport.class")
+    protected String local_transport_class;
+
+    @Property(description="Configuration of the local transport", name="local_transport.config")
+    protected String local_transport_config;
 
     @Property(name="message_processing_policy.max_buffer_size",
       description="Max number of messages buffered for consumption of the delivery thread in MaxOneThreadPerSender. 0 creates an unbounded buffer")
@@ -570,7 +575,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     /** The address (host and port) of this member */
     protected Address         local_addr;
     protected PhysicalAddress local_physical_addr;
-    protected volatile        View view;
+    protected volatile View   view;
 
     /** The members of this group (updated when a member joins or leaves). With a shared transport,
      * members contains _all_ members from all channels sitting on the shared transport */
@@ -601,6 +606,8 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     protected Bundler                 bundler;
 
     protected MessageProcessingPolicy msg_processing_policy=new MaxOneThreadPerSender();
+
+    protected LocalTransport          local_transport;
 
     protected DiagnosticsHandler      diag_handler;
     protected final List<DiagnosticsHandler.ProbeHandler> preregistered_probe_handlers=new LinkedList<>();
@@ -670,9 +677,10 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     }
 
     @ManagedAttribute(description="The address of the channel")
-    public String  getLocalAddress() {return local_addr != null? local_addr.toString() : null;}
-    public Address localAddress()    {return local_addr;}
-    public View    view()            {return view;}
+    public String          getLocalAddress()      {return local_addr != null? local_addr.toString() : null;}
+    public Address         localAddress()         {return local_addr;}
+    public PhysicalAddress localPhysicalAddress() {return local_physical_addr;}
+    public View            view()                 {return view;}
 
     @ManagedAttribute(description="The physical address of the channel")
     public String getLocalPhysicalAddress() {return local_physical_addr != null? local_physical_addr.printIpAddress() : null;}
@@ -718,6 +726,9 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         }
         return (T)this;
     }
+
+    public LocalTransport   getLocalTransport()                   {return local_transport;}
+    public <T extends TP> T setLocalTransport(LocalTransport ltp) {this.local_transport=ltp; return (T)this;}
 
     public Bundler getBundler() {return bundler;}
 
@@ -938,6 +949,12 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
             }
         }
 
+        if(local_transport_class != null) {
+            Class<?> cl=Util.loadClass(local_transport_class, getClass());
+            local_transport=(LocalTransport)cl.getDeclaredConstructor().newInstance();
+            local_transport.init(this, local_transport_config);
+        }
+
         if(thread_factory == null)
             thread_factory=new LazyThreadFactory("jgroups", false, true)
               .useFibers(use_fibers).log(this.log);
@@ -1048,7 +1065,8 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
 
     public void destroy() {
         super.destroy();
-
+        if(local_transport != null)
+            local_transport.destroy();
         if(logical_addr_cache_reaper != null) {
             logical_addr_cache_reaper.cancel(false);
             logical_addr_cache_reaper=null;
@@ -1222,12 +1240,12 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
             case Event.CONNECT_WITH_STATE_TRANSFER_USE_FLUSH:
                 cluster_name=new AsciiString((String)evt.getArg());
                 header=new TpHeader(cluster_name);
-
-                // local_addr is null when shared transport
                 setInAllThreadFactories(cluster_name != null? cluster_name.toString() : null, local_addr, thread_naming_pattern);
                 setThreadNames();
                 connectLock.lock();
                 try {
+                    if(local_transport != null)
+                        local_transport.start();
                     handleConnect();
                 }
                 catch(Exception e) {
@@ -1242,6 +1260,8 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
                 unsetThreadNames();
                 connectLock.lock();
                 try {
+                    if(local_transport != null)
+                        local_transport.stop();
                     handleDisconnect();
                 }
                 finally {
@@ -1809,7 +1829,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     }
 
 
-    protected boolean addPhysicalAddressToCache(Address logical_addr, PhysicalAddress physical_addr) {
+    public boolean addPhysicalAddressToCache(Address logical_addr, PhysicalAddress physical_addr) {
         return addPhysicalAddressToCache(logical_addr, physical_addr, true);
     }
 
