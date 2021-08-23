@@ -945,23 +945,11 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         fetchLocalAddresses();
     }
 
-    /**
-     * Send to all members in the group. UDP would use an IP multicast message, whereas TCP would send N
-     * messages, one for each member
-     * @param data The data to be sent. This is not a copy, so don't modify it
-     * @param offset
-     * @param length
-     * @throws Exception
-     */
-    public abstract void sendMulticast(byte[] data, int offset, int length) throws Exception;
 
     /**
-     * Send a unicast to 1 member. Note that the destination address is a *physical*, not a logical address
+     * Send a unicast to a member. Note that the destination address is a *physical*, not a logical address
      * @param dest Must be a non-null unicast address
      * @param data The data to be sent. This is not a copy, so don't modify it
-     * @param offset
-     * @param length
-     * @throws Exception
      */
     public abstract void sendUnicast(PhysicalAddress dest, byte[] data, int offset, int length) throws Exception;
 
@@ -1701,14 +1689,14 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
             msg_stats.incrNumMsgsSent(1);
             msg_stats.incrNumBytesSent(length);
         }
-        if(dest == null)
-            sendMulticast(buf, offset, length);
+        if(dest != null)
+            sendTo(dest, buf, offset, length);
         else
-            sendToSingleMember(dest, buf, offset, length);
+            sendToAll(buf, offset, length);
     }
 
 
-    protected void sendToSingleMember(final Address dest, byte[] buf, int offset, int length) throws Exception {
+    protected void sendTo(final Address dest, byte[] buf, int offset, int length) throws Exception {
         if(local_transport != null && has_local_members && isLocalMember(dest)) {
             try {
                 local_transport.sendTo(dest, buf, offset, length);
@@ -1746,11 +1734,11 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     }
 
 
-
-    /** Fetches the physical addrs for mbrs and sends the msg to each physical address. Asks discovery for missing
+    /** Fetches the physical addrs for all mbrs and sends the msg to each physical address. Asks discovery for missing
      * members' physical addresses if needed */
-    protected void sendToMembers(Collection<Address> mbrs, byte[] buf, int offset, int length) throws Exception {
+    protected void sendToAll(byte[] buf, int offset, int length) throws Exception {
         List<Address> missing=null;
+        Set<Address> mbrs=members;
 
         if(mbrs == null || mbrs.isEmpty())
             mbrs=logical_addr_cache.keySet();
@@ -1763,7 +1751,6 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
                 missing.add(mbr);
                 continue;
             }
-
             try {
                 if(!Objects.equals(local_physical_addr, target))
                     sendUnicast(target, buf, offset, length);

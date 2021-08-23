@@ -261,11 +261,12 @@ public class UDP extends TP {
         return String.format("group_addr=%s:%d\n", mcast_group_addr.getHostName(), mcast_port);
     }
 
-    public void sendMulticast(byte[] data, int offset, int length) throws Exception {
+    @Override
+    public void sendToAll(byte[] data, int offset, int length) throws Exception {
         if(ip_mcast && mcast_addr != null)
             _send(mcast_addr.getIpAddress(), mcast_addr.getPort(), data, offset, length);
         else
-            sendToMembers(members, data, offset, length);
+            super.sendToAll(data, offset, length);
     }
 
     public void sendUnicast(PhysicalAddress dest, byte[] data, int offset, int length) throws Exception {
