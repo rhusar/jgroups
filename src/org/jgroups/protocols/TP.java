@@ -735,7 +735,35 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     }
 
     public LocalTransport    getLocalTransport()                 {return local_transport;}
-    public <T extends TP> T  setLocalTransport(LocalTransport l) {this.local_transport=l; return (T)this;}
+    public <T extends TP> T  setLocalTransport(LocalTransport l) {
+        if(this.local_transport != null) {
+            this.local_transport.resetStats();
+            this.local_transport.stop();
+            this.local_transport.destroy();
+            this.local_transport_class=null;
+        }
+        this.local_transport=l;
+        if(this.local_transport != null) {
+            try {
+                this.local_transport_class=l.getClass().toString();
+                this.local_transport.init(this, this.local_transport_config);
+                this.local_transport.start();
+            }
+            catch(Exception ex) {
+                log.error("failed setting new local transport", ex);
+            }
+        }
+        return (T)this;
+    }
+
+    public <T extends TP> T setLocalTransport(String tp_class) throws Exception {
+        if(tp_class == null || tp_class.trim().equals("null"))
+            return setLocalTransport((LocalTransport)null);
+        Class<?> cl=Util.loadClass(tp_class, getClass());
+        LocalTransport ltp=(LocalTransport)cl.getDeclaredConstructor().newInstance();
+        return setLocalTransport(ltp);
+    }
+
     public boolean           isLocalMember(Address a)            {return local_members != null && local_members.contains(a);}
     public Bundler           getBundler()                        {return bundler;}
 

@@ -1432,6 +1432,8 @@ public class Util {
         if(type == long.class    || type == Long.class)    return Long.valueOf(arg);
         if(type == float.class   || type == Float.class)   return Float.valueOf(arg);
         if(type == double.class  || type == Double.class)  return Double.valueOf(arg);
+        if(arg == null || arg.equals("null"))
+            return null;
         return arg;
     }
 
