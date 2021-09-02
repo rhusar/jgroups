@@ -677,6 +677,9 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
 
     public boolean isMulticastCapable() {return supportsMulticasting();}
 
+    public boolean hasLocalMembers() {return has_local_members;}
+    public LazyRemovalCache<Address,PhysicalAddress> getLogicalAddressCache() {return logical_addr_cache;}
+
     public String toString() {
         return local_addr != null? getName() + "(local address: " + local_addr + ')' : getName();
     }
@@ -1262,6 +1265,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
                     ((MaxOneThreadPerSender)msg_processing_policy).viewChange(view.getMembers());
 
                 if(local_transport != null) {
+                    local_transport.viewChange(this.view);
                     local_members.clear();
                     for(Address mbr : members) {
                         PhysicalAddress pa=getPhysicalAddressFromCache(mbr);
@@ -1738,12 +1742,26 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
      * members' physical addresses if needed */
     protected void sendToAll(byte[] buf, int offset, int length) throws Exception {
         List<Address> missing=null;
-        Set<Address> mbrs=members;
+        Set<Address>  mbrs=members;
+        boolean       local_send_successful=true;
 
         if(mbrs == null || mbrs.isEmpty())
             mbrs=logical_addr_cache.keySet();
 
+        if(local_transport != null && has_local_members) {
+            try {
+                local_transport.sendToAll(buf, offset, length);
+            }
+            catch(Exception ex) {
+                log.warn("failed sending group message via local transport, sending it via regular transport", ex);
+                local_send_successful=false;
+            }
+        }
+
         for(Address mbr: mbrs) {
+            if(local_send_successful && local_transport != null && has_local_members && isLocalMember(mbr))
+                continue; // skip if local transport sent the message successfully
+
             PhysicalAddress target=mbr instanceof PhysicalAddress? (PhysicalAddress)mbr : logical_addr_cache.get(mbr);
             if(target == null) {
                 if(missing == null)

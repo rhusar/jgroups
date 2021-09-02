@@ -1,6 +1,7 @@
 package org.jgroups.protocols;
 
 import org.jgroups.Address;
+import org.jgroups.View;
 
 /**
  * A local transport is used for sending messages only to single (or all) members of the same host.
@@ -18,6 +19,8 @@ public interface LocalTransport {
     LocalTransport stop();
     LocalTransport destroy();
     LocalTransport resetStats();
+
+    LocalTransport viewChange(View v);
 
     /**
      * Sends a message to a given local member. The caller should check before whether dest is a local member;
