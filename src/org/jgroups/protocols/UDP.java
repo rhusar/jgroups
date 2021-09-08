@@ -263,8 +263,17 @@ public class UDP extends TP {
 
     @Override
     public void sendToAll(byte[] data, int offset, int length) throws Exception {
-        if(ip_mcast && mcast_addr != null)
+        if(ip_mcast && mcast_addr != null) {
+            if(local_transport != null && hasLocalMembers()) {
+                try {
+                    local_transport.sendToAll(data, offset, length);
+                }
+                catch(Exception ex) {
+                    log.warn("failed sending group message via local transport, sending it via regular transport", ex);
+                }
+            }
             _send(mcast_addr.getIpAddress(), mcast_addr.getPort(), data, offset, length);
+        }
         else
             super.sendToAll(data, offset, length);
     }
@@ -304,6 +313,18 @@ public class UDP extends TP {
         if(evt.getType() == Event.VIEW_CHANGE) {
             if(suppress_log_out_of_buffer_space != null)
                 suppress_log_out_of_buffer_space.removeExpired(suppress_time_out_of_buffer_space);
+            if(local_transport != null) {
+                boolean loopback_mode=hasLocalMembers();
+                try {
+                    // if we have local members, we send the multicast through the local transport, and do *not* need
+                    // to receive a copy on the local host
+                    sock.setLoopbackMode(loopback_mode);
+                    mcast_sock.setLoopbackMode(loopback_mode);
+                }
+                catch(SocketException e) {
+                    log.error("failed setting loopback-mode to " + loopback_mode, e);
+                }
+            }
         }
         return retval;
     }
@@ -792,6 +813,13 @@ public class UDP extends TP {
                     if(len > receive_buf.length && log.isErrorEnabled())
                         log.error(Util.getMessage("SizeOfTheReceivedPacket"), len, receive_buf.length, receive_buf.length);
 
+                    if(local_transport != null && hasLocalMembers()) {
+                        InetAddress sender=packet.getAddress();
+                        if(local_addresses.contains(sender)) {
+                            log.trace("[%s] dropping message from local member %s", local_addr, sender);
+                            return;
+                        }
+                    }
                     receive(new IpAddress(packet.getAddress(), packet.getPort()),
                             receive_buf, packet.getOffset(), len);
                 }
