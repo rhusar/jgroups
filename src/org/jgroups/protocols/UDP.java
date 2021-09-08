@@ -415,8 +415,10 @@ public class UDP extends TP {
             else
                 mcast_sock=getSocketFactory().createMulticastSocket("jgroups.udp.mcast_sock", mcast_port);
 
-            if(disable_loopback)
-                mcast_sock.setOption(StandardSocketOptions.IP_MULTICAST_LOOP, false);
+            if(disable_loopback) {
+                mcast_sock.setLoopbackMode(true);
+                sock.setLoopbackMode(true);
+            }
 
             mcast_addr=new IpAddress(mcast_group_addr, mcast_port);
 
