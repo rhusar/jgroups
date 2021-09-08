@@ -607,7 +607,6 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     protected MessageProcessingPolicy msg_processing_policy=new MaxOneThreadPerSender();
 
     protected LocalTransport          local_transport;
-    @ManagedAttribute(description="A list of local addresses")
     protected Collection<InetAddress> local_addresses;
     @ManagedAttribute(description="List of members with local addresses (same-host members) in the current view")
     protected final List<Address>     local_members=new ArrayList<>();
@@ -681,6 +680,8 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     public String toString() {
         return local_addr != null? getName() + "(local address: " + local_addr + ')' : getName();
     }
+    @ManagedOperation(description="Print the local addresses of this host")
+    public String getLocalAddresses() {return local_addresses != null? local_addresses.toString() : "null";}
 
     @ManagedAttribute(description="The address of the channel")
     public String          getLocalAddress()      {return local_addr != null? local_addr.toString() : null;}
