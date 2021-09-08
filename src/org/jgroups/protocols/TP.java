@@ -611,8 +611,6 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
     protected Collection<InetAddress> local_addresses;
     @ManagedAttribute(description="List of members with local addresses (same-host members) in the current view")
     protected final List<Address>     local_members=new ArrayList<>();
-    @ManagedAttribute(description="Whether or not we have members with local addresses in the current view")
-    protected volatile boolean        has_local_members;
 
     protected DiagnosticsHandler      diag_handler;
     protected final List<DiagnosticsHandler.ProbeHandler> preregistered_probe_handlers=new LinkedList<>();
@@ -677,7 +675,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
 
     public boolean isMulticastCapable() {return supportsMulticasting();}
 
-    public boolean hasLocalMembers() {return has_local_members;}
+    public boolean hasLocalMembers() {return !local_members.isEmpty();}
     public LazyRemovalCache<Address,PhysicalAddress> getLogicalAddressCache() {return logical_addr_cache;}
 
     public String toString() {
@@ -767,8 +765,8 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         return setLocalTransport(ltp);
     }
 
-    public boolean           isLocalMember(Address a)            {return local_members != null && local_members.contains(a);}
-    public Bundler           getBundler()                        {return bundler;}
+    public boolean           isLocalMember(Address a) {return local_members != null && local_members.contains(a);}
+    public Bundler           getBundler()             {return bundler;}
 
     /** Installs a bundler. Needs to be done before the channel is connected */
     public <T extends TP> T setBundler(Bundler bundler) {
@@ -1269,16 +1267,13 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
                     local_members.clear();
                     for(Address mbr : members) {
                         PhysicalAddress pa=getPhysicalAddressFromCache(mbr);
-                        if(pa == null) {
-                            log.warn("physical address for %s not found", mbr);
+                        if(pa == null || Objects.equals(pa, local_physical_addr))
                             continue;
-                        }
                         InetAddress addr=pa instanceof IpAddress? ((IpAddress)pa).getIpAddress() : null;
                         if(addr != null && local_addresses.contains(addr))
                             if(!local_members.contains(mbr))
                                 local_members.add(mbr);
                     }
-                    has_local_members=!local_members.isEmpty();
                 }
                 break;
 
@@ -1701,7 +1696,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
 
 
     protected void sendTo(final Address dest, byte[] buf, int offset, int length) throws Exception {
-        if(local_transport != null && has_local_members && isLocalMember(dest)) {
+        if(local_transport != null && hasLocalMembers() && isLocalMember(dest)) {
             try {
                 local_transport.sendTo(dest, buf, offset, length);
                 return;
@@ -1748,7 +1743,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         if(mbrs == null || mbrs.isEmpty())
             mbrs=logical_addr_cache.keySet();
 
-        if(local_transport != null && has_local_members) {
+        if(local_transport != null && hasLocalMembers()) {
             try {
                 local_transport.sendToAll(buf, offset, length);
             }
@@ -1759,7 +1754,7 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
         }
 
         for(Address mbr: mbrs) {
-            if(local_send_successful && local_transport != null && has_local_members && isLocalMember(mbr))
+            if(local_send_successful && local_transport != null && hasLocalMembers() && isLocalMember(mbr))
                 continue; // skip if local transport sent the message successfully
 
             PhysicalAddress target=mbr instanceof PhysicalAddress? (PhysicalAddress)mbr : logical_addr_cache.get(mbr);
