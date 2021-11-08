@@ -6,7 +6,7 @@
 jgroups.bind_addr=127.0.0.1
 jgroups.tcpping.initial_hosts=127.0.0.1[7800],127.0.0.1[7801]
 jgroups.tunnel.gossip_router_hosts=127.0.0.1[12001]
-jgroups.udp.mcast_addr=228.8.8.8
+jgroups.udp.mcast_addr=224.0.1.106
 jgroups.udp.mcast_port=45588
 jgroups.udp.ip_ttl=5
 # use true for IPv6 and false for IPv4 
