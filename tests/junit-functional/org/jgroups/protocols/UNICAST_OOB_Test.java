@@ -20,7 +20,7 @@ import java.util.List;
  * https://issues.redhat.com/browse/JGRP-2327
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = {Global.FUNCTIONAL, Global.CI_EXCLUDED}, singleThreaded = true)
 public class UNICAST_OOB_Test {
     protected JChannel a, b;
 

@@ -2,6 +2,7 @@ package org.jgroups.tests;
 
 import org.jgroups.Address;
 import org.jgroups.BytesMessage;
+import org.jgroups.Global;
 import org.jgroups.Message;
 import org.jgroups.util.NonBlockingCreditMap;
 import org.jgroups.util.Util;
@@ -60,6 +61,7 @@ public class NonBlockingCreditMapTest {
         assert map.isQueuing() && map.getQueuedMessages() == 1;
     }
 
+    @Test(groups = { Global.CI_EXCLUDED })
     public void testBlockingDecrement() {
         map=new NonBlockingCreditMap(MAX_CREDITS, 2500, new ReentrantLock(true));
         addAll();

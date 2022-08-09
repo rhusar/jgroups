@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * @author Bela Ban
  * @since  4.0.5
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups={Global.FUNCTIONAL, Global.CI_EXCLUDED},singleThreaded=true)
 public class ViewHandlerTest {
     protected ViewHandler<Integer>            view_handler;
     protected Consumer<Collection<Integer>>   req_handler;

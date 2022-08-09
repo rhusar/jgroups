@@ -16,7 +16,7 @@ import java.util.List;
  * @author Bela Ban
  * @since  3.6
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups={Global.FUNCTIONAL,Global.TIME_SENSITIVE},singleThreaded=true)
 public class UNICAST_RetransmitTest {
     protected JChannel a, b;
     protected static final int MAX_BUNDLE_SIZE=10000;

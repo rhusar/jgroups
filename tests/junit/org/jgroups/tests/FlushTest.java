@@ -23,7 +23,7 @@ import java.util.stream.Stream;
  * 
  * @author Bela Ban
  */
-@Test(groups = {Global.FLUSH, Global.EAP_EXCLUDED}, singleThreaded = true)
+@Test(groups = {Global.FLUSH, Global.EAP_EXCLUDED, Global.CI_EXCLUDED}, singleThreaded = true)
 public class FlushTest {
 
     public void testSingleChannel() throws Exception {

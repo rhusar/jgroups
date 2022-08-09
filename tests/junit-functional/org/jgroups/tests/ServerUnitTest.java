@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 /**
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = {Global.FUNCTIONAL, Global.CI_EXCLUDED}, singleThreaded = true)
 public class ServerUnitTest {
     protected static final InetAddress bind_addr;
 
@@ -245,7 +245,6 @@ public class ServerUnitTest {
             }
         }
     }
-
 
     public void testAsyncConnectThenSend() throws Exception {
         try(NioServer a=(NioServer)create(true, 0); NioServer b=(NioServer)create(true, 0)) {

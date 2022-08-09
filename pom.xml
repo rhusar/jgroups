@@ -21,6 +21,8 @@
         <nexus.snapshot.server.url>https://repository.jboss.org/nexus/content/repositories/snapshots/</nexus.snapshot.server.url>
         <insecure.repositories>ERROR</insecure.repositories>
         <log4j2.version>2.18.0</log4j2.version>
+        <byteman.version>4.0.19</byteman.version>
+        <surefire.excludedGroups/>
     </properties>
 
     <organization>
@@ -133,7 +135,7 @@
         <dependency>
             <groupId>org.jboss.byteman</groupId>
             <artifactId>byteman-bmunit</artifactId>
-            <version>4.0.19</version>
+            <version>${byteman.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -180,6 +182,7 @@
                 <directory>conf</directory>
                 <includes>
                     <include>*.jks</include>
+                    <include>**/*.btm</include>
                 </includes>
             </testResource>
         </testResources>
@@ -266,6 +269,7 @@
                                 <source>tests/junit-functional</source>
                                 <!-- tests/other and tests/perf are included in the normal sources -->
                                 <source>tests/stress</source>
+                                <source>tests/util</source>
                             </sources>
                         </configuration>
                     </execution>
@@ -298,6 +302,20 @@
                                         <include name="*.xsd"/>
                                     </fileset>
                                 </copy>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>keystore-dir</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <echo message="Creating temporary keystore directory"/>
+                                <delete dir="./keystore"/>
+                                <mkdir dir="./keystore"/>
                             </target>
                         </configuration>
                     </execution>
@@ -360,20 +378,164 @@
                     <arguments>-DskipTests=true -Dmaven.test.skip=true -Dmaven.javadoc.skip=true</arguments>
                     <preparationGoals>clean</preparationGoals>
                 </configuration>
-
             </plugin>
 
-            <!-- Disable default tests: they won't run since they are lacking configuration -->
+            <!-- Create keystores used in tests -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>exec.keystore</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>org.jgroups.demos.KeyStoreGenerator</mainClass>
+                            <arguments>
+                                <argument>--storeName</argument>
+                                <argument>keystore/defaultStore.keystore</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>exec.keystore2</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <mainClass>org.jgroups.demos.KeyStoreGenerator</mainClass>
+                            <arguments>
+                                <argument>--storeName</argument>
+                                <argument>keystore/defaultStore2.keystore</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Copy byteman-<version>.jar into target/lib/ subsequently used by surefire byteman execution -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-byteman</id>
+                        <phase>process-test-resources</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                        <configuration>
+                            <artifactItems>
+                                <artifactItem>
+                                    <groupId>org.jboss.byteman</groupId>
+                                    <artifactId>byteman</artifactId>
+                                    <version>${byteman.version}</version>
+                                    <type>jar</type>
+                                    <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                                </artifactItem>
+                            </artifactItems>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Run all tests in 3 executions: default-test, separate executions for udp, and tcp-nio stack-dependent tests. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <!--configuration>
-                    <skip>true</skip>
-                    <skipTests>true</skipTests>
-                </configuration-->
                 <executions>
+                    <!-- Runs all tests *excluding* byteman tests and all 'stack-dependent' tests using 'tcp' stack. -->
                     <execution>
+                        <id>default-test</id>
                         <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>listener</name>
+                                    <value>org.jgroups.util.JUnitXMLReporter</value>
+                                </property>
+                            </properties>
+                            <argLine>-Dchannel.conf=tcp.xml</argLine>
+                            <runOrder>alphabetical</runOrder>
+                            <excludes>
+                                <exclude>org/jgroups/tests/byteman/**</exclude>
+                            </excludes>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
+                    </execution>
+                    <!-- Runs all 'stack-dependent' tests using 'tcp-nio' stack. -->
+                    <execution>
+                        <id>surefire.tcp-nio</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>listener</name>
+                                    <value>org.jgroups.util.JUnitXMLReporter</value>
+                                </property>
+                            </properties>
+                            <argLine>-Dchannel.conf=tcp-nio.xml</argLine>
+                            <runOrder>alphabetical</runOrder>
+                            <groups>base,stack-dependent</groups>
+                            <excludes>
+                                <exclude>org/jgroups/tests/byteman/**</exclude>
+                            </excludes>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
+                    </execution>
+                    <!-- Runs all 'stack-dependent' tests using 'udp' stack. -->
+                    <execution>
+                        <id>surefire.udp</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>listener</name>
+                                    <value>org.jgroups.util.JUnitXMLReporter</value>
+                                </property>
+                            </properties>
+                            <argLine>-Dchannel.conf=udp.xml -Djgroups.bind_addr=localhost</argLine>
+                            <runOrder>alphabetical</runOrder>
+                            <groups>base,stack-dependent</groups>
+                            <excludes>
+                                <exclude>org/jgroups/tests/byteman/**</exclude>
+                            </excludes>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
+                    </execution>
+                    <!-- Runs all 'byteman' tests -->
+                    <execution>
+                        <id>surefire.byteman</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <properties>
+                                <property>
+                                    <name>listener</name>
+                                    <value>org.jgroups.util.JUnitXMLReporter</value>
+                                </property>
+                            </properties>
+                            <runOrder>alphabetical</runOrder>
+                            <argLine>-Dorg.jboss.byteman.contrib.bmunit.agent.inhibit=true -javaagent:${project.build.directory}/lib/byteman-${byteman.version}.jar=listener:true</argLine>
+                            <includes>
+                                <include>org/jgroups/tests/byteman/**</include>
+                            </includes>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -388,8 +550,7 @@
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.13</version> <!-- 1.6.9 and 1.6.10 are completely broken!! -->
-                    <!-- Perhaps try 1.6.12? -->
+                    <version>1.6.13</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -455,6 +616,11 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>3.3.0</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>3.1.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>

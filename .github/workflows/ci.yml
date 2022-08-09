@@ -11,7 +11,9 @@ permissions:
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest, macos-latest ]
         java: [ 11, 17, 19-ea ]
@@ -32,4 +34,4 @@ jobs:
             ${{ runner.os }}-maven-
       - name: Build with Maven
         # In order to support Windows PowerShell, a space between -D property=true is required.
-        run: mvn -B verify -D maven.test.skip.exec=true
+        run: mvn verify -B -fae -D java.net.preferIPv4Stack=true -D java.net.preferIPv6Addresses=false -D surefire.excludedGroups=ci-excluded,time-sensitive

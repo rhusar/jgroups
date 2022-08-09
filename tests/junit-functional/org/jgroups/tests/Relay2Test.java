@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @author Bela Ban
  * @since 3.2
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups={Global.FUNCTIONAL,Global.CI_EXCLUDED},singleThreaded=true)
 public class Relay2Test {
     private static final Log log = LogFactory.getLog(Relay2Test.class);
 
@@ -198,7 +198,6 @@ public class Relay2Test {
         x.connect(SFO_CLUSTER);
         waitForBridgeView(2, 20000, 500, a, x);
     }
-
 
     public void testCoordinatorShutdown() throws Exception {
         a=createNode(LON, "A", LON_CLUSTER, null);

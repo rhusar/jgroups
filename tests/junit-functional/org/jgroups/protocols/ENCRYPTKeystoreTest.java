@@ -30,7 +30,7 @@ public class ENCRYPTKeystoreTest {
     protected int symIvLength() { return 0; }
 
     public void testInitWrongKeystoreProperties() {
-        SYM_ENCRYPT encrypt=new SYM_ENCRYPT().keystoreName("unkownKeystore.keystore");
+        SYM_ENCRYPT encrypt=new SYM_ENCRYPT().keystoreName("keystore/unkownKeystore.keystore");
         try {
             encrypt.init();
             encrypt.msgFactory(new DefaultMessageFactory());
@@ -41,13 +41,13 @@ public class ENCRYPTKeystoreTest {
     }
 
     public void testInitKeystoreProperties() throws Exception {
-        SYM_ENCRYPT encrypt=new SYM_ENCRYPT().keystoreName("defaultStore.keystore");
+        SYM_ENCRYPT encrypt=new SYM_ENCRYPT().keystoreName("keystore/defaultStore.keystore");
         encrypt.init();
         encrypt.msgFactory(new DefaultMessageFactory());
     }
 
     public void testMessageDownEncode() throws Exception {
-        SYM_ENCRYPT encrypt=create("defaultStore.keystore");
+        SYM_ENCRYPT encrypt=create("keystore/defaultStore.keystore");
         MockProtocol observer=new MockProtocol();
         encrypt.setDownProtocol(observer);
 
@@ -68,7 +68,7 @@ public class ENCRYPTKeystoreTest {
 
 
     public void testMessageUpDecode() throws Exception {
-        SYM_ENCRYPT encrypt=create("defaultStore.keystore"), encrypt2=create("defaultStore.keystore");
+        SYM_ENCRYPT encrypt=create("keystore/defaultStore.keystore"), encrypt2=create("keystore/defaultStore.keystore");
         
         MockProtocol observer=new MockProtocol();
         encrypt.setUpProtocol(observer);
@@ -93,7 +93,7 @@ public class ENCRYPTKeystoreTest {
     }
 
     public void testMessageUpWrongKey() throws Exception {
-        SYM_ENCRYPT encrypt=create("defaultStore.keystore"), encrypt2=create("defaultStore2.keystore");
+        SYM_ENCRYPT encrypt=create("keystore/defaultStore.keystore"), encrypt2=create("keystore/defaultStore2.keystore");
         MockProtocol observer=new MockProtocol();
         encrypt.setUpProtocol(observer);
 
@@ -115,7 +115,7 @@ public class ENCRYPTKeystoreTest {
     }
 
     public void testMessageUpNoEncryptHeader() throws Exception {
-        SYM_ENCRYPT encrypt=create("defaultStore.keystore"), encrypt2=create("defaultStore.keystore");
+        SYM_ENCRYPT encrypt=create("keystore/defaultStore.keystore"), encrypt2=create("keystore/defaultStore.keystore");
         MockProtocol observer=new MockProtocol();
         encrypt.setUpProtocol(observer);
         String messageText="hello this is a test message";
@@ -129,7 +129,7 @@ public class ENCRYPTKeystoreTest {
 
 
     public void testMessageUpNoBuffer() throws Exception {
-        SYM_ENCRYPT encrypt=create("defaultStore.keystore");
+        SYM_ENCRYPT encrypt=create("keystore/defaultStore.keystore");
         MockProtocol observer=new MockProtocol();
         encrypt.setUpProtocol(observer);
         encrypt.up((Message)new BytesMessage().putHeader(ENCRYPT_ID, new EncryptHeader((byte)0, "bla".getBytes(), encrypt.makeIv())));
@@ -137,7 +137,7 @@ public class ENCRYPTKeystoreTest {
     }
 
     public void testEncryptEntireMessage() throws Exception {
-        SYM_ENCRYPT encrypt=create("defaultStore.keystore");
+        SYM_ENCRYPT encrypt=create("keystore/defaultStore.keystore");
         Message msg=new BytesMessage(null, "hello world".getBytes()).putHeader((short)1, new TpHeader("cluster"));
         MockProtocol mock=new MockProtocol();
         encrypt.setDownProtocol(mock);

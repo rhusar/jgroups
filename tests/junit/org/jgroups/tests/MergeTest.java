@@ -19,7 +19,7 @@ import java.util.Map;
  * 
  * @author vlada
  */
-@Test(groups=Global.STACK_DEPENDENT,singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class MergeTest extends ChannelTestBase {
     protected JChannel[] channels=null;
 

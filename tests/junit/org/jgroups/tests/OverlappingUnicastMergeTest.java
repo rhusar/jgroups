@@ -17,7 +17,7 @@ import java.util.Set;
  * Related JIRA: https://issues.redhat.com/browse/JGRP-940
  * @author Bela Ban
  */
-@Test(groups=Global.STACK_DEPENDENT,singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class OverlappingUnicastMergeTest extends ChannelTestBase {
     private JChannel a, b, c;
     private MyReceiver ra, rb, rc;

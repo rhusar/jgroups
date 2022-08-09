@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Tests the GMS protocol for merging functionality
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = {Global.FUNCTIONAL, Global.CI_EXCLUDED}, singleThreaded = true)
 public class GMS_MergeTest {
 
     static final short GMS_ID=ClassConfigurator.getProtocolId(GMS.class);

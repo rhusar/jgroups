@@ -27,7 +27,7 @@ import java.util.stream.Stream;
  * @author Bela Ban
  * @since  4.0.13
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = { Global.FUNCTIONAL, Global.TIME_SENSITIVE }, singleThreaded = true)
 public class LockServiceDuplicateLockTest implements LockNotification {
     protected final JChannel[]     channels=new JChannel[6];
     protected final LockService[]  lock_services=new LockService[channels.length];

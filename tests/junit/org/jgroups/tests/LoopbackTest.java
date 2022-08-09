@@ -17,7 +17,7 @@ import java.util.concurrent.TimeoutException;
  * @author Richard Achmatowicz 12 May 2008
  * @author Bela Ban Dec 31 2003
  */
-@Test(groups=Global.STACK_DEPENDENT,singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class LoopbackTest extends ChannelTestBase {
     protected JChannel channel;
 

@@ -28,7 +28,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.testng.AssertJUnit.*;
 
 /** Tests https://issues.redhat.com/browse/JGRP-2234 */
-@Test(groups = {Global.FUNCTIONAL, Global.EAP_EXCLUDED}, timeOut = 60000, dataProvider="createLockingProtocol")
+@Test(groups = {Global.FUNCTIONAL, Global.EAP_EXCLUDED, Global.CI_EXCLUDED}, timeOut = 60000, dataProvider="createLockingProtocol")
 public class ClusterSplitLockTest {
     private static final int        MEMBERS = 3;
     private final JChannel[]        channels = new JChannel[MEMBERS];

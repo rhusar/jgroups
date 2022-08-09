@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * The class name is a misnomer, both multicast *and* unicast messages are tested
  * @author Bela Ban
  */
-@Test(groups=Global.STACK_DEPENDENT,singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class OOBTest extends ChannelTestBase {
     private JChannel a, b;
 

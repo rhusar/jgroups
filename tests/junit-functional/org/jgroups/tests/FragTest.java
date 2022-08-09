@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  *
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true,dataProvider="fragProvider")
+@Test(groups={Global.FUNCTIONAL, Global.CI_EXCLUDED},singleThreaded=true,dataProvider="fragProvider")
 public class FragTest {
     public static final long NUM_MSGS  =   1000;
     public static final int  MSG_SIZE  = 100000;

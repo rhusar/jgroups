@@ -68,6 +68,7 @@ public class FrozenCoordinatorTest {
      * not find a coord, but still receive A's info, but never become coord as A's UUID is lower. This leads to a
      * never-ending loop, only terminated by @invocationTimeOut. See JGRP-2262 for details.
      */
+    @Test(groups = { Global.CI_EXCLUDED })
     public void testFrozenCoord() throws Exception {
         try(OutputStream out=new FileOutputStream(file)) {
             out.write(INFO.getBytes());

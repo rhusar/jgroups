@@ -26,7 +26,7 @@ import java.util.concurrent.CountDownLatch;
  * @author Bela Ban
  * @since  3.3
  */
-@Test(groups=Global.BYTEMAN,singleThreaded=true,dataProvider="configProvider")
+@Test(groups = {Global.BYTEMAN, Global.CI_EXCLUDED}, singleThreaded = true, dataProvider = "configProvider")
 public class ServerTest extends BMNGRunner {
     protected BaseServer               a, b;
     protected static final InetAddress loopback;

@@ -65,8 +65,7 @@ public class LargeMergeTest {
         }
     }
 
-
-
+    @Test(groups = { Global.CI_EXCLUDED })
     public void testClusterFormationAfterMerge() {
         System.out.println("\nEnabling message traffic between members to start the merge");
         for(JChannel ch: channels) {

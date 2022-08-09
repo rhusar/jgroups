@@ -71,7 +71,7 @@ public final class Global {
     public static final String PREFIX="org.jgroups.protocols.";
     public static final String DEFAULT_PROTOCOL_STACK="udp.xml";
     
-    // for TestNG
+    // TestNG org.testng.annotations.Test#groups
     public static final String FUNCTIONAL="functional";
     public static final String TIME_SENSITIVE="time-sensitive";
     public static final String STACK_DEPENDENT="stack-dependent";
@@ -81,6 +81,12 @@ public final class Global {
     public static final String BYTEMAN="byteman";
     public static final String EAP_EXCLUDED="eap-excluded"; // tests not supported by EAP
     public static final String ENCRYPT="encrypt";
+    /**
+     * Groups tests that currently fail either consistently or intermittently on CI run using GitHub Actions.
+     * These tests are currently excluded from regular testing on pull requests.
+     * Going further, these need to be analyzed, fixed, and eventually this group might be removed entirely.
+     */
+    public static final String CI_EXCLUDED="ci-excluded";
 
     public static final String INITIAL_MCAST_ADDR="INITIAL_MCAST_ADDR";
     public static final String INITIAL_MCAST_PORT="INITIAL_MCAST_PORT";

@@ -21,7 +21,7 @@ import java.util.List;
  * Tests the UNICAST{2,3} protocols with messages sent by member A to itself
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups={Global.FUNCTIONAL,Global.CI_EXCLUDED},singleThreaded=true)
 public class UNICAST_MessagesToSelfTest {
     protected JChannel ch;
     protected Address  a1;
@@ -39,7 +39,7 @@ public class UNICAST_MessagesToSelfTest {
         };
     }
 
-    @Test(dataProvider="configProvider")
+    @Test(dataProvider = "configProvider")
     public void testReceptionOfAllMessages(Protocol prot) throws Throwable {
         System.out.println("prot=" + prot.getClass().getSimpleName());
         ch=createChannel(prot, null).name("A");

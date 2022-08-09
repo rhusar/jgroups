@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * 
  * @author Bela Ban
  */
-@Test(groups=Global.STACK_DEPENDENT, singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class MessageDispatcherUnitTest extends ChannelTestBase {
     protected MessageDispatcher      da, db;
     protected JChannel               a, b;
@@ -142,6 +142,7 @@ public class MessageDispatcherUnitTest extends ChannelTestBase {
         BlockableRequestHandler blockableHandler = new BlockableRequestHandler();
         db= new MessageDispatcher(b).setRequestHandler(blockableHandler);
         b.connect("MessageDispatcherUnitTest");
+        Util.waitUntilAllChannelsHaveSameView(30000, 1000, a, b);
         assert 2 == b.getView().size();
         blockableHandler.installThreadTrap();
         try {
@@ -187,6 +188,7 @@ public class MessageDispatcherUnitTest extends ChannelTestBase {
         b.setName("B");
         db=new MessageDispatcher(b, new MyHandler(new byte[size]));
         b.connect("MessageDispatcherUnitTest");
+        Util.waitUntilAllChannelsHaveSameView(30000, 1000, a, b);
         assert 2 == b.getView().size();
 
         System.out.println("casting message");

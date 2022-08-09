@@ -1,7 +1,6 @@
 package org.jgroups.tests;
 
 import org.jgroups.Address;
-import org.jgroups.Global;
 import org.jgroups.JChannel;
 import org.jgroups.protocols.*;
 import org.jgroups.protocols.pbcast.GMS;
@@ -9,7 +8,6 @@ import org.jgroups.protocols.pbcast.GmsImpl;
 import org.jgroups.protocols.pbcast.ViewHandler;
 import org.jgroups.stack.Protocol;
 import org.jgroups.util.Util;
-import org.testng.annotations.Test;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -27,7 +25,6 @@ import java.util.stream.Stream;
  * @author Radoslav Husar
  * @author Bela Ban
  */
-@Test(groups={Global.FUNCTIONAL,Global.ENCRYPT},singleThreaded=true)
 public abstract class BaseLeaveTest {
     protected final String      cluster_name=getClass().getSimpleName();
     protected static final int  NUM=10;
@@ -37,7 +34,7 @@ public abstract class BaseLeaveTest {
         channels=new JChannel[num];
         for(int i = 0; i < channels.length; i++)
             channels[i] = create(String.valueOf(i + 1)).connect(cluster_name);
-        Util.waitUntilAllChannelsHaveSameView(10000, 1000, channels);
+        Util.waitUntilAllChannelsHaveSameView(30000, 1000, channels);
         System.out.printf("-- initial view fo r cluster %s:\n%s\n\n",
                           cluster_name, Stream.of(channels).map(ch -> ch.getAddress() + ": " + ch.getView())
                             .collect(Collectors.joining("\n")));

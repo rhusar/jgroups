@@ -20,7 +20,7 @@ import java.util.stream.Stream;
  * @author Bela Ban
  * @since  4.0
  */
-@Test(singleThreaded=true)
+@Test(groups = {Global.CI_EXCLUDED}, singleThreaded = true, timeOut = 60_000L)
 public class RingBundlerTest {
     protected static final Address a=Util.createRandomAddress("A"), b=Util.createRandomAddress("B"),
       c=Util.createRandomAddress("C"), d=Util.createRandomAddress("D");
@@ -92,6 +92,7 @@ public class RingBundlerTest {
         // we skip the sending
         rb.publishReadIndex(available);
 
+        // FIXME in case of a test failure, this can hang indefinitely – worked around with org.testng.annotations.Test.timeOut
         while(!rb.isEmpty() || !allDone(adders)) {
             available=rb.waitForMessages(5, (it,spins) -> LockSupport.parkNanos(1));
             System.out.println("available = " + available);

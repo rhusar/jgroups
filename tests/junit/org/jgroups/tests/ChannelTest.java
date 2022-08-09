@@ -15,7 +15,7 @@ import java.util.List;
  * Tests various methods in JChannel
  * @author Bela Ban
  */
-@Test(groups=Global.STACK_DEPENDENT)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED})
 public class ChannelTest extends ChannelTestBase {       
 
     public void testBasicOperations() throws Exception {

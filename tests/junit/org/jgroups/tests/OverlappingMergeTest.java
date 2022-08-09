@@ -19,7 +19,7 @@ import java.util.*;
  * Related JIRA: https://issues.redhat.com/browse/JGRP-940
  * @author Bela Ban
  */
-@Test(groups=Global.STACK_DEPENDENT,singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class OverlappingMergeTest extends ChannelTestBase {
     protected JChannel a, b, c, d;
     protected MyReceiver ra, rb, rc, rd;

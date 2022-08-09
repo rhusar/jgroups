@@ -1,5 +1,6 @@
 package org.jgroups.tests;
 
+import org.jgroups.Global;
 import org.jgroups.util.LazyThreadFactory;
 import org.jgroups.util.Util;
 import org.testng.annotations.Test;
@@ -30,6 +31,7 @@ public class LazyThreadFactoryTest {
     }
 
     /** Tests that threads whose names have been replaced (no <ADDR> or <CLUSTER>) have been removed from the factory's queue */
+    @Test(groups = { Global.CI_EXCLUDED })
     public void testRemovalOfCompleteThreads() throws Exception {
         factory.setPattern("cl");
 

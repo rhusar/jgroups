@@ -40,7 +40,7 @@ import org.wildfly.security.x500.cert.BasicConstraintsExtension;
 import org.wildfly.security.x500.cert.SelfSignedX509CertificateAndSigningKey;
 import org.wildfly.security.x500.cert.X509CertificateBuilder;
 
-@Test(groups = {Global.FUNCTIONAL, Global.ENCRYPT}, singleThreaded = true)
+@Test(groups = {Global.FUNCTIONAL, Global.ENCRYPT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class TLSTest {
    public static final String PROTOCOL = "TLSv1.2";
    public static final String BASE_DN = "CN=%s,OU=JGroups,O=JBoss,L=Red Hat";
@@ -105,7 +105,7 @@ public class TLSTest {
       a = create("A").connect(cluster_name).setReceiver(ra = new MyReceiver<String>().rawMsgs(true));
       b = create("B").connect(cluster_name).setReceiver(rb = new MyReceiver<String>().rawMsgs(true));
       c = create("C").connect(cluster_name).setReceiver(rc = new MyReceiver<String>().rawMsgs(true));
-      Util.waitUntilAllChannelsHaveSameView(10000, 500, a, b, c);
+      Util.waitUntilAllChannelsHaveSameView(30000, 500, a, b, c);
       verifyForbiddenJoiner("U");
       verifyForbiddenJoiner("O");
       Util.close(c, b, a);

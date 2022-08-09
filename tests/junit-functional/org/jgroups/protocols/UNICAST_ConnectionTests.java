@@ -19,7 +19,7 @@ import java.util.stream.Stream;
  * Some of the tests may fail occasionally until https://issues.redhat.com/browse/JGRP-1594 is fixed
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = { Global.FUNCTIONAL, Global.TIME_SENSITIVE }, singleThreaded = true)
 public class UNICAST_ConnectionTests {
     protected JChannel   a, b;
     protected Address    a_addr, b_addr;
@@ -88,7 +88,7 @@ public class UNICAST_ConnectionTests {
     /**
      * Scenario #4 (A closes the connection unilaterally (B keeps it open), then reopens it and sends messages)
      */
-    @Test(dataProvider="configProvider")
+    @Test(dataProvider = "configProvider", groups = { Global.TIME_SENSITIVE })
     public void testAClosingUnilaterally(Class<? extends UNICAST3> unicast) throws Exception {
         setup(unicast);
         sendToEachOtherAndCheck(10);

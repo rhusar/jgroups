@@ -10,7 +10,7 @@ import java.util.concurrent.CyclicBarrier;
 /**
  * @author Bela Ban
  */
-@Test(groups=Global.STACK_DEPENDENT,singleThreaded=true)
+@Test(groups = {Global.STACK_DEPENDENT, Global.CI_EXCLUDED}, singleThreaded = true)
 public class ConcurrentCloseTest extends ChannelTestBase {
     JChannel a, b;
 
@@ -23,7 +23,6 @@ public class ConcurrentCloseTest extends ChannelTestBase {
         a=createChannel().name("A").setReceiver(new MyReceiver("A")).connect(GROUP);
         b=createChannel().name("B").setReceiver(new MyReceiver("B")).connect(GROUP);
         makeUnique(a,b);
-        Util.waitUntilAllChannelsHaveSameView(10000, 1000, a,b);
 
         CyclicBarrier barrier=new CyclicBarrier(3);
         Closer one=new Closer(a, barrier), two=new Closer(b, barrier);

@@ -1,5 +1,6 @@
 package org.jgroups.tests;
 
+import org.jgroups.Global;
 import org.jgroups.util.SizeBoundedQueue;
 import org.jgroups.util.Util;
 import org.testng.annotations.Test;
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeoutException;
  * @author Bela Ban
  * @since  4.0.4
  */
-@Test
+@Test(groups = { Global.TIME_SENSITIVE })
 public class SizeBoundedQueueTest {
 
     public void testAdd() throws InterruptedException {

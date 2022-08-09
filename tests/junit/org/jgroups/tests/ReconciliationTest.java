@@ -20,7 +20,7 @@ import java.util.*;
  * Various tests for the FLUSH protocol
  * @author Bela Ban
  */
-@Test(groups={Global.FLUSH,Global.EAP_EXCLUDED},singleThreaded=true)
+@Test(groups = {Global.FLUSH, Global.EAP_EXCLUDED, Global.CI_EXCLUDED}, singleThreaded = true)
 public class ReconciliationTest {
     protected List<JChannel>   channels;
     protected List<MyReceiver> receivers;

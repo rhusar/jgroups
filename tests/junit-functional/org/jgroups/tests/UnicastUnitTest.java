@@ -21,7 +21,7 @@ import java.util.stream.Stream;
  * Tests unicast functionality
  * @author Bela Ban
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = { Global.FUNCTIONAL, Global.CI_EXCLUDED }, singleThreaded = true)
 public class UnicastUnitTest {
     protected JChannel a, b, c, d;
 
@@ -52,6 +52,7 @@ public class UnicastUnitTest {
         _testMessagesToOther();
     }
 
+    @Test(groups = { Global.TIME_SENSITIVE })
     public void testMessagesToEverybodyElse() throws Exception {
         MyReceiver<String> r1=new MyReceiver(), r2=new MyReceiver(), r3=new MyReceiver(), r4=new MyReceiver();
         a=create("A", false);

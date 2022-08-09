@@ -34,7 +34,7 @@ import static org.testng.AssertJUnit.assertTrue;
  * @author Bela Ban
  * @since  5.2.3
  */
-@Test(groups=Global.FUNCTIONAL,singleThreaded=true)
+@Test(groups = {Global.FUNCTIONAL, Global.CI_EXCLUDED}, singleThreaded = true)
 public class CounterTest {
     protected JChannel       a, b, c;
     protected CounterService service_a, service_b, service_c;
